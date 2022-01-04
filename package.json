@@ -1,6 +1,9 @@
 {
   "name": "micarnet",
   "version": "1.0.0",
+  "engines": {
+    "node": "16.13.0"
+  },
   "description": "",
   "main": "index.js",
   "scripts": {
@@ -13,6 +16,7 @@
   "dependencies": {
     "axios": "^0.24.0",
     "cors": "^2.8.5",
+    "dotenv": "^10.0.0",
     "express": "^4.17.2",
     "html-pdf": "^3.0.1",
     "jsqr": "^1.4.0",

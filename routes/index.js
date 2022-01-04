@@ -107,8 +107,8 @@ router.post("/crear-carnets", async (req, res, next) => {
   // console.log('REQ_BODY_', data);
   data.forEach((ele) => {
     if (!ele.vacunacion) {
-      ele.qrB64 = `${req.protocol}://192.168.1.4:2000/${ele.qrB64}`;
-      // ele.qrB64 = `${req.protocol}://${req.get('host')}/${ele.qrB64}`;
+      /* ele.qrB64 = `${req.protocol}://192.168.1.4:2000/${ele.qrB64}`; */
+      ele.qrB64 = `${req.protocol}://${req.get('host')}/${ele.qrB64}`;
       console.log("ARMANDO_URL", ele.qrB64);
     }
   });

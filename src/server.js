@@ -10,6 +10,7 @@ const ss = require('socket.io-stream');
 const fs = require('fs');
 const cors = require('cors')
 const app = express();
+require('dotenv').config()
 
 Consulta = (pQuery) => {
   return pool.query(pQuery);
@@ -23,7 +24,9 @@ app.use(express.static(path.join(__dirname, '../public')));
 app.set('../views', path.join(__dirname, 'views'));
 app.set("view engine", "pug");
 
-app.set('port', 2000 || 'PORT');
+
+//Configuracion
+app.set('port', process.env.PORT || 2000);
 
 const server = app.listen(app.get('port'), () => {
   console.log('server on port', app.get('port'));
