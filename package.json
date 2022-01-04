@@ -22,7 +22,6 @@
     "jsqr": "^1.4.0",
     "morgan": "^1.10.0",
     "mysql": "^2.18.1",
-    "node-downloader-helper": "^1.0.19",
     "node-poppler": "^5.1.1",
     "pdf-parse": "^1.1.1",
     "pngjs": "^6.0.0",
