@@ -1,0 +1,354 @@
+doctype html
+html(lang="en")
+  head
+    meta(charset="UTF-8")
+    meta(http-equiv="X-UA-Compatible", content="IE=edge")
+    meta(name="viewport", content="width=device-width, initial-scale=1.0")
+    meta(name="theme-color", content="#b7e3e4")
+    title Registro
+    script(src='/socket.io/socket.io.js')
+    script(src='/js/socket.io-stream.js')
+    link(href='lib/Bootstrap 4.3.1/css/bootstrap.min.css',rel='stylesheet')
+    link(href='lib/bootstrap-datepicker-1.9.0-dist/css/bootstrap-datepicker.min.css',rel='stylesheet')
+    script(type='text/javascript', src='lib/jquery 3.4.1/dist/jquery.min.js')
+    script(src='lib/bootstrap-datepicker-1.9.0-dist/js/bootstrap-datepicker.min.js')
+  body
+    .card
+      .card-header
+        | REGISTRO
+      .card-body
+        form#formCrearCarnets(action='/crear-carnets', method='POST')
+          .form-row
+            .col-md-12.mb-12
+              .form-group.custom-control.custom-switch
+                input#vacunacionCheck.custom-control-input(type='checkbox' value = 1 checked)
+                label#textVacuna.custom-control-label(for='vacunacionCheck') Con Vacunas
+          .form-row#formArchibosPdf
+            .col-md-12.mb-12
+              .input-group.mb-3
+                .custom-file
+                  input#files.custom-file-input(type='file' multiple)
+                  label.custom-file-label(for='files') Elija los archibos
+          .form-row.formDatosUsuarios(style='display: none')
+            .col-md-4.mb-3
+              label(for='dni') Dni
+              .d-flex.justify-content-start
+                input#dni.form-control(type='text' placeholder='Dni' minlength="8")
+                button#btnBuscarDni.btn.btn-primary.ml-2(type="button") Buscar
+          .form-row.formDatosUsuarios(style='display: none')    
+            .col-md-4.mb-3
+              label(for='primerApellido') Primer Apellido
+              input#primerApellido.form-control(type='text' placeholder='Primer Apellido')
+            .col-md-4.mb-3
+              label(for='segundoApellido') Segundo Apellido
+              input#segundoApellido.form-control(type='text' placeholder='Segundo Apellido')
+            .col-md-4.mb-3
+              label(for='nombres') Nombres
+              input#nombres.form-control(type='text' placeholder='Nombres')
+            .col-md-3.mb-3
+              label(for='fechaNacimiento') Fecha de Nacimiento
+              input#fechaNacimiento.form-control(type='text' placeholder='dia/mes/año')
+            .col-md-3.mb-3
+              label(for='sexo') Sexo
+              select#sexo.form-control
+                option(value='') Seleccionar un sexo
+                option(value='M') M
+                option(value='F') F
+            .col-md-3.mb-3
+              label(for='dosis') Dosis
+              select#dosis.form-control
+                option(value='') Seleccionar Numero de dosis
+                option(value='2' selected) 2ª dosis
+                option(value='3') 3ª dosis
+            .col-md-3.mb-3
+              label(for='txtDepartamento') Departamento
+              input#txtDepartamento.form-control(type='text' value='CUSCO' placeholder='Departamento')
+          .form-row
+            .col-md-4.mb-3
+              label(for='telefono') Telefono
+              input#telefono.form-control(type='number' placeholder='Telefono' minlength="9")
+          input#formData(type="hidden" name="data[]" )
+      .card-footer.d-flex.justify-content-around.fixed-bottom  
+        button#submit.btn.btn-primary(type='button') Crear Carnets
+        button#btnAgregar.btn.btn-success(type='button') Agregar +
+      .card.mt-2
+        .card-header.d-flex.justify-content-between.align-items-center
+            div LISTA DE CARNETS
+            button#btnLimpiar.btn.btn-secondary(type="button") Limpiar
+        .card-body
+          .row#carnets
+            mixin carnets(nombre, primerApellido, segundoApellido, dni)
+              .col-md-4.mb-3
+                .card
+                  .card-header.d-flex.justify-content-between
+                    .div #{nombre} #{primerApellido} #{segundoApellido} 
+                    .div #{dni}
+                  .card-body
+                    button.btn.btn-danger.btn-block(type='button') ELIMINAR
+                    
+    script.
+      let listaCarnet = [];
+      var sk_formRegister = io();
+      var socket = io();
+      (function($){
+        $.fn.datepicker.dates['es'] = {
+            days: ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"],
+            daysShort: ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"],
+            daysMin: ["Do", "Lu", "Ma", "Mi", "Ju", "Vi", "Sa"],
+            months: ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"],
+            monthsShort: ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"],
+            today: "Hoy",
+            monthsTitle: "Meses",
+            clear: "Borrar",
+            weekStart: 1,
+            format: "dd/mm/yyyy"
+        };
+      }(jQuery));
+      $('.custom-file input').change(function (e) {
+          var files = [];
+          for (var i = 0; i < $(this)[0].files.length; i++) {
+              files.push($(this)[0].files[i].name);
+          }
+          $(this).next('.custom-file-label').html(files.join(', '));
+      });
+      $('#fechaNacimiento').datepicker({
+          autoclose: true,
+          // beforeShowDay: $.noop,
+          // calendarWeeks: false,
+          // clearBtn: false,
+          //daysOfWeekDisabled: [],
+          // endDate: Infinity,
+          // forceParse: true,
+          format: 'dd/mm/yyyy',
+          // keyboardNavigation: true,
+          language: 'es',
+          orientation: "botom",
+          // rtl: false,
+          //startDate: -Infinity,
+          startView: 2,
+          // todayBtn: true,
+          // todayHighlight: true,
+          // weekStart: 0,
+          // minViewMode: 'months',
+          maxViewMode: 2,
+          // changeYear: false,
+      }).on('changeDate', function(e) {
+
+      })
+      
+      $('#btnLimpiar').click(() => {
+        limpiar();
+        listaCarnet = [];
+        $("#carnets").empty();
+      });
+
+      $('#btnAgregar').click(() => {
+        console.log('vacunacion_',$('#vacunacionCheck').val())
+        console.log('vacunacion_',typeof $('#vacunacionCheck').val())
+        const vacunacion = parseInt($('#vacunacionCheck').val());
+        if (!vacunacion) {
+          const dosis = $('#dosis').val();
+          const departamento = $('#txtDepartamento').val();
+          const fechaNacimiento = $('#fechaNacimiento').val();
+          const dni = $('#dni').val();
+          sk_formRegister.emit('obtenerVacunasYQR', ({fechaNacimiento, dosis, departamento, dni}));
+        } else {
+          const filesPDF = $('#files')[0].files;
+          enviarPdf_al_Servidor(filesPDF);
+        }
+      });
+
+      // onclick="$('#card_${dni}').remove()"
+      function eliminar(dni){
+        $(`#card_${dni}`).remove();
+        const myVal = listaCarnet.find(el => el.dni = dni)
+        indice = listaCarnet.indexOf(myVal)
+        listaCarnet.splice(indice, 1);
+        console.log(listaCarnet);
+        $("#formData").val(JSON.stringify(listaCarnet));
+        console.log(listaCarnet);
+      }
+      $('#submit').click(() => {
+        if(listaCarnet.length<1){
+          alert('No hay ningun Carnet! Crea Uno');
+        } else {
+          $('#formCrearCarnets').submit();
+        }
+      });
+      $('#btnBuscarDni').click(() => {
+          const dni = $('#dni').val();
+          sk_formRegister.emit('solicitar_info_dni',dni)
+      });
+      $('#vacunacionCheck').on('change', function (event, state) {
+        let test = event.target.checked;
+        console.log(event.target.checked);
+        if (event.target.checked) {
+          $('#formArchibosPdf').show('');
+          $('.formDatosUsuarios').hide('');
+          $('#textVacuna').text('Con Vacunas')
+          $(".formDatosUsuarios").removeClass("was-validated");
+          $(".form-control").prop('required',false);
+          $('#vacunacionCheck').val(1);
+        } else {
+          $('#formArchibosPdf').hide('');
+          $('.formDatosUsuarios').show('');
+          $('#textVacuna').text('Sin Vacunas')
+          $(".formDatosUsuarios").addClass("was-validated");
+          $(".form-control").prop('required',true);
+          $('#vacunacionCheck').val(0);
+        }
+      });
+      $('#fechaNacimiento').on('input', function(e) {
+        this.type = 'text';
+        var input = this.value;
+        if (/\D\/$/.test(input)) input = input.substr(0, input.length - 3);
+        var values = input.split('/').map(function(v) {
+          return v.replace(/\D/g, '')
+        });
+        console.log('values', values);
+        if (values[0]) values[0] = checkValue(values[0], 31);
+        if (values[1]) values[1] = checkValue(values[1], 12);
+        var output = values.map(function(v, i) {
+          return v.length == 2 && i < 2 ? v + ' / ' : v;
+        });
+        this.value = output.join('').substr(0, 14);
+      });
+
+      /*
+      * FUNCIONES
+      */
+      enviarPdf_al_Servidor = (files) => {
+        // var files = e.target.files
+        // upload a file to the server.
+        for(let i = 0; i < files.length; i++){
+          stream = ss.createStream();
+          ss(sk_formRegister).emit('file', stream,
+            {
+              name: files[i].name,
+              telefono: $('#telefono').val()
+            });
+          ss.createBlobReadStream(files[i]).pipe(stream);
+        }
+      }
+      agregarCards = (dataPdf) => {
+        listaCarnet.push(dataPdf);
+        const model = `
+          <div id="card_${dataPdf.dni}" class="col-md-4 mb-3">
+              <div class="card border-success">
+                  <div class="card-header d-flex justify-content-between">
+                      <div class="div">${dataPdf.nombre}</div>
+                      <div class="div">${dataPdf.dni}</div>
+                  </div>
+                  <div class="card-body">
+                    <button id="btnEliminar" onclick="eliminar(${dataPdf.dni})" class="btn btn-danger btn-block" type="button">ELIMINAR
+                    </button>
+                  </div>
+              </div>
+          </div>`;
+        $("#carnets").append(model);
+        $("#formData").val(JSON.stringify(listaCarnet));
+        console.log(listaCarnet);
+      }
+      
+      obtenerVacunas = (fechaNacimiento) => {
+        sk_formRegister.emit('obtenerVacunas', (fechaNacimiento));
+      }
+
+      limpiar = () => {
+        $('#files').val('');
+        $('#dni').val('');
+        $('#primerApellido').val('');
+        $('#segundoApellido').val('');
+        $('#nombres').val('');
+        $('#sexo').val('');
+        $('#dosis').val(2);
+        $('#telefono').val('');
+        $('#txtDepartamento').val('CUSCO');
+        $('#fechaNacimiento').val('');
+        $('.custom-file-label').text('Elija los archibos');
+      }
+
+      function checkValue(str, max) {
+        if (str.charAt(0) !== '0' || str == '00') {
+          var num = parseInt(str);
+          if (isNaN(num) || num <= 0 || num > max) num = 1;
+          str = num > parseInt(max.toString().charAt(0)) 
+                && num.toString().length == 1 ? '0' + num : num.toString();
+        };
+        return str;
+      };
+
+
+      // SOCKETS Recibir apis de dni e Ruc
+
+      sk_formRegister.on('enviar_info_de_pdfs', (data) => {
+        console.log("data", data)
+        agregarCards(data)
+      });
+
+      sk_formRegister.on('recuperar_info_dni_online',(data) => {
+        if(data != 'DESCONECCION'){
+            if(data != 'An error has occurred.'){
+                $('#nombres').val(data.nombres);
+                $('#primerApellido').val(data.apellidoPaterno);
+                $('#segundoApellido').val(data.apellidoMaterno);
+                      // caso todo bien
+            }else{
+                $('#nombre_cliente').val('');
+                alert("DNI Incorrecto")                        // caso que no encuentre el DNI
+            }  
+        }else{
+            $('#nombre_cliente').val('');
+            alert('No hay coneccion a internet')    // caso Sin internet :'(
+        }
+      });
+
+      sk_formRegister.on('recibirVacunasYQR', (data) => {
+        const dni = $('#dni').val();
+        const primerApellido = $('#primerApellido').val();
+        const segundoApellido = $('#segundoApellido').val();
+        const nombre = `${primerApellido} ${segundoApellido} ${$('#nombres').val()}`;
+        const sexo = $('#sexo').val();
+        const telefono = $('#telefono').val();
+        const departamento = $('#txtDepartamento').val();
+        const fechaNacimiento = $('#fechaNacimiento').val();
+        // const vacunas = [];
+        // const qrB64 = [];
+
+        listaCarnet.push({
+          dni,
+          nombre,
+          fechaNacimiento,
+          sexo,
+          tipoVacuna: 'Vacuna contra Covid',
+          vacunas: data.vacunas,
+          vacunacion: false,
+          telefono,
+          departamento,
+          nacionalidad: 'PERU',
+          qrB64:data.qrB64 // Obtenemos despues de crear la dirección
+        });
+        const model = `              
+          <div id="card_${dni}" class="col-md-4 mb-3">
+              <div class="card border-secondary">
+                  <div class="card-header d-flex justify-content-between">
+                      <div class="div">${nombre}</div>
+                      <div class="div">${dni}</div>
+                  </div>
+                  <div class="card-body">
+                    <button id="btnEliminar" onclick="eliminar(${dni})" class="btn btn-danger btn-block" type="button">ELIMINAR
+                    </button>
+                  </div>
+              </div>
+          </div>`;
+        $("#carnets").append(model);
+        $("#formData").val(JSON.stringify(listaCarnet));
+        console.log(listaCarnet);
+        console.log('VACUNAS RECIBIDAS', data);
+      });
+
+
+
+    
+
+

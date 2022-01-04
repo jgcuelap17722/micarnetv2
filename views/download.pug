@@ -1,0 +1,74 @@
+doctype
+html(lang='es')
+  head
+    meta(charset="UTF-8")
+    meta(http-equiv="X-UA-Compatible", content="IE=edge")
+    meta(name="viewport", content="width=device-width, initial-scale=1.0")
+    meta(name="theme-color", content="#b7e3e4")
+    title Descargas
+    script(src='/socket.io/socket.io.js')
+    link(href='lib/Bootstrap 4.3.1/css/bootstrap.min.css',rel='stylesheet')
+    script(type='text/javascript', src='lib/jquery 3.4.1/dist/jquery.min.js')
+  body
+    .container
+      .row#contenedorArchibos
+        - var i = 0;
+        each val in data
+          .col-md-3.mt-3.mb-3
+            .card.text-center
+              .card-body
+              h3.card-title.text-uppercase #{data[i]}
+              .btn.btn-danger.botonEliminar(id=`btnEliminar_${data[i]}` type='button')
+                //- enviame a ala ruta links/delete con su respectivo id
+                | Eliminar
+              .btn.btn-secondary.botonDescargar(id=`btnDescargar_${data[i]}` type='button')
+                | Descargar
+          - i++           
+        else
+          #cont.container.pt-4
+            .row
+              .col-md-4.mx-auto
+                .card.card-body.text-center
+                  p No hay ordenes creadas
+                  a.btn.btn-success(href='nueva-orden') Crea una!
+    script.
+      var sk_formDownload = io();
+        const data    = !{JSON.stringify(data)}
+        $(`.botonEliminar`).click((e) => {
+            console.log('LE DISTE CLICK A ', e.target.id);
+            const file = e.target.id.substring(12);
+            sk_formDownload.emit('Eliminar_archibo', file);
+        });
+        $(`.botonDescargar`).click((e) => {
+            console.log('LE DISTE CLICK A ', e.target.id);
+            const file = e.target.id.substring(13);
+            // sk_formDownload.emit('Descargar_archibo', file);
+            var hostname = $(location).attr('hostname'); 
+            window.open(`/download?file=${file}`);
+        });
+        sk_formDownload.on('Archibo_Eliminado', (data) => {
+          $("#contenedorArchibos").empty();
+          listarARchibos(data.data);
+          location.reload();
+        });
+        sk_formDownload.on('Archibo_Descargado', (data) => {
+          alert('Se descargo el archibo :D')
+        });
+        
+        listarARchibos = (data) => {
+          console.log(data);
+          for (const el of data){
+            const model = `<div class="col-md-3 mt-3 mb-3">
+              <div class="card text-center">
+                  <div class="card-body"></div>
+                  <h3 class="card-title text-uppercase">${el}</h3>
+                  <div class="btn btn-danger botonEliminar" id="btnEliminar_${el}" type="button">Eliminar</div>
+                  <div class="btn btn-secondary botonDescargar" id="btnDescargar_${el}" type="button">Descargar</div>
+              </div>
+          </div>`;
+          $('#contenedorArchibos').append(model);
+          }
+        }
+
+
+
