@@ -1,5 +1,4 @@
 
-const { DownloaderHelper } = require('node-downloader-helper');
 const path = require('path');
 const express = require('express');
 const morgan = require('morgan');
@@ -89,15 +88,5 @@ io.on('connection', (sk_formDownload) => {
         sk_formDownload.emit('Archibo_Eliminado', {data: files})
       });
     });
-  })
-  sk_formDownload.on('Descargar_archibo', async (nombreArchibo) => {
-    const directory = `${process.cwd()}\\downloads\\carnets\\`;
-    const file = `${process.cwd()}\\downloads\\carnets\\${nombreArchibo}`;
-    const dl = new DownloaderHelper(file , directory);
-    dl.start();
-    dl.on('end', () => {
-      sk_formDownload.emit('Archibo_Descargado')
-      console.log('Download Completed')
-    })
   })
 })
