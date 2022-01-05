@@ -2,11 +2,8 @@ const pdf = require("html-pdf");
 const pug = require("pug");
 const path = require("path");
 const { Router } = require("express");
-const pdf_parse = require("pdf-parse");
 const pool = require("../database"); //referencia a ala base de datos
-const res = require("express/lib/response");
 const fs = require("fs");
-const helpers = require("../lib/helpers");
 
 const router = Router();
 
@@ -243,20 +240,6 @@ router.post("/crear-carnets", async (req, res, next) => {
   res.redirect(`/download?key=abduscan`);
 });
 
-router.get("/listar/delete/:id", async function (req, res, next) {
-  const {id} = req.params
-  const directory = `${process.cwd()}\\downloads\\carnets\\${id}`;
-  fs.unlink(path.join(directory), (err) => {
-    if (err) throw err;
-    res.redirect(`/download?key=abduscan`);
-  });
-});
-router.get("/listar/download/:id", function (req, res, next) {
-  const {id} = req.params
-  const directory = `${process.cwd()}\\downloads\\carnets\\${id}`;
-  res.download(directory);
-});
-
 router.get("/download_prueba", function (req, res, next) {
 
     const directory = `${process.cwd()}\\downloads\\carnets\\`;
@@ -277,26 +260,15 @@ router.get("/download", function (req, res, next) {
     res.download(directory);
 });
 
-router.get("/pdf", async (req, res, next) => {
+/* router.get("/pdf", async (req, res, next) => {
   let dataBuffer = fs.readFileSync(
     `${process.cwd()}\\downloads\\MINSA - Carnet Vacunación Document angel.pdf`
   );
-
-  /*   pdf_parse(dataBuffer).then(function (data) {
-    const salida = helpers.betweenText(
-      "Nombre / Name ",
-      "Fecha de Nacimiento / Date of",
-      "\n",
-      data.text
-    );
-    console.log(`salida Prueba `, salida);
-    next(res.send(data));
-  }); */
 
   let a = await helpers.getDataPdf(
     `${process.cwd()}\\downloads\\MINSA - Carnet Vacunación Document angel.pdf`
   );
   console.log("RESOLVIENDO", a);
   res.send(a);
-});
+}); */
 module.exports = router;
